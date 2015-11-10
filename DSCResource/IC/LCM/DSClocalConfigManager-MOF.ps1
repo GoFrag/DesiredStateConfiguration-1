@@ -7,12 +7,16 @@ Configuration LCMPUSH
 		{
 			AllowModuleOverwrite = $True
             ConfigurationMode = 'ApplyAndAutoCorrect'
-			RefreshMode = 'Push'	
+			RefreshMode = 'Push'
+            RebootNodeIfNeeded = $True	
 		}
 	}
 }
 
-$Computername = 'zxads1','zxads2'
+$Computername = 'ICADS37','ICADS41','ICADS45','ICADS38'
 
 # Create the Computer.Meta.Mof in folder
-LCMPush -OutputPath C:\DSCResource\LAB\LCM
+LCMPush -OutputPath \\ic\infrastructure\DSCResource\IC\DomainControllers\LCM
+
+#$creds = Get-Credential
+#Set-DscLocalConfigurationManager -ComputerName $computername -Path "\\ic\infrastructure\DSCResource\IC\DomainControllers\LCM" -Verbose -Credential Administrator
