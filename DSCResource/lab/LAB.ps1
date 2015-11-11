@@ -1,5 +1,5 @@
 ﻿# A configuration to Create High Availability Domain Controller 
-configuration AssertHADC
+configuration DSCLab
 {
    param
     (
@@ -78,12 +78,6 @@ configuration AssertHADC
             Ensure = "Present"
             Name = "RDC"
         }
-
-        xFirewall DisableFW
-        {
-            Profile = 'All'
-            Enabled = 'False'
-        }
     }
 
     Node $AllNodes.Where{$_.Role -eq "Replica DC"}.Nodename
@@ -141,10 +135,42 @@ configuration AssertHADC
             Name = "RDC"
         }
         
-        xFirewall DisableFW
+    }
+    
+    Node $AllNodes.Where{$_.Role -eq "Member Server"}.Nodename
+    {
+      
+        xWaitForADDomain DscForestWait
         {
-            Profile = 'All'
-            Enabled = 'False'
+            DomainName = $Node.DomainName
+            DomainUserCredential = $domainCred
+            RetryCount = $Node.RetryCount
+            RetryIntervalSec = $Node.RetryIntervalSec
+        }
+        
+        xComputer JoinDomain 
+        { 
+            Name          = $node.HostName
+            DomainName    = $Node.DomainName 
+            Credential    = $domainCred  # Credential to join to domain 
+        }   
+                
+        WindowsFeature DSCService
+        {
+            Ensure = "Present"
+            Name = "DSC-Service"
+        }
+
+        WindowsFeature TelnetClient
+        {
+            Ensure = "Present"
+            Name = "Telnet-Client"
+        }
+
+        WindowsFeature RemoteDifferentialCompression
+        {
+            Ensure = "Present"
+            Name = "RDC"
         }
     }
 }
@@ -174,11 +200,35 @@ $ConfigData = @{
                     Nodename = "DSCLABDC2"
                     Role = "Replica DC"
                     HostName = "DSCLABDC2"
+                },
+
+                @{
+                    Nodename = "DSCLABS1"
+                    Role = "Member Server"
+                    HostName = "DSCLABS1"
+                },
+
+                @{
+                    Nodename = "DSCLABS2"
+                    Role = "Member Server"
+                    HostName = "DSCLABS2"
+                },
+
+                @{
+                    Nodename = "DSCLABS3"
+                    Role = "Member Server"
+                    HostName = "DSCLABS3"
+                },
+
+                @{
+                    Nodename = "DSCLABS4"
+                    Role = "Member Server"
+                    HostName = "DSCLABS4"
                 }
             )
         }
 
-AssertHADC -ConfigurationData $ConfigData -OutputPath C:\GIT\DesiredStateConfiguration\DSCResource\lab\DomainControllers\Config -Verbose
+DSCLab -ConfigurationData $ConfigData -OutputPath C:\GIT\DesiredStateConfiguration\DSCResource\lab\Config -Verbose
 
 #$creds = Get-Credential
-#Start-DscConfiguration -path C:\GIT\DesiredStateConfiguration\DSCResource\lab\DomainControllers\config -wait -verbose -credential $Creds
+#Start-DscConfiguration -path C:\GIT\DesiredStateConfiguration\DSCResource\lab\config -wait -verbose -credential $Creds

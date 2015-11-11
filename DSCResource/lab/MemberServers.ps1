@@ -54,9 +54,9 @@ $ConfigData = @{
     AllNodes = @(
                 @{
                     Nodename = '*'
-                    DomainName = 'zx.ac.uk'
+                    DomainName = 'dsclab.local'
                     RetryCount = 30
-                    RetryIntervalSec = 45
+                    RetryIntervalSec = 90
                     PSDscAllowPlainTextPassword = $true
                     NIC = 'Ethernet0'
                     AddressFamily = 'IPV4'
@@ -64,32 +64,32 @@ $ConfigData = @{
                 },
         
                 @{
-                    Nodename = "S1"
+                    Nodename = "DSCLABS1"
                     Role = "MemberServer"
-                    HostName = "S1"
+                    HostName = "DSCLABS1"
                 },
         
                 @{
-                    Nodename = "S2"
+                    Nodename = "DSCLABS2"
                     Role = "MemberServer"
-                    HostName = "S2"
+                    HostName = "DSCLABS2"
                 }
 
                 @{
-                    Nodename = "S3"
+                    Nodename = "DSCLABS3"
                     Role = "MemberServer"
-                    HostName = "S3"
+                    HostName = "DSCLABS3"
                 }
 
                 @{
-                    Nodename = "S4"
+                    Nodename = "DSCLABS4"
                     Role = "MemberServer"
-                    HostName = "S4"
+                    HostName = "DSCLABS4"
                 }
             )
         }
 
-MemberServers -ConfigurationData $ConfigData -OutputPath C:\DSCResource\lab\MemberServers\Config -Verbose
+MemberServers -ConfigurationData $ConfigData -OutputPath C:\GIT\DesiredStateConfiguration\DSCResource\lab\MemberServers\Config -Verbose
 
 #$creds = Get-Credential
 #Start-DscConfiguration -path .\config -wait -verbose -credential $Creds
