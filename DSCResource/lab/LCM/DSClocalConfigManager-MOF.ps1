@@ -6,16 +6,18 @@ Configuration LCMPUSH
 		Settings
 		{
 			AllowModuleOverwrite = $True
-            ConfigurationMode = 'ApplyAndAutoCorrect'
-			RefreshMode = 'Push'	
+            ConfigurationMode = 'ApplyOnly'
+			RefreshMode = 'Push'
+            RebootNodeIfNeeded = $True
 		}
 	}
 }
 
-$Computername = 'zxads1','zxads2'
+$Computername = 'DSCLabDC01','DSCLabDC02','DSCLabS01','DSCLabS02','DSCLabS03','DSCLabS04'
 
 # Create the Computer.Meta.Mof in folder
-LCMPush -OutputPath C:\DSCResource\Lab\LCM
+LCMPush -OutputPath C:\GIT\DesiredStateConfiguration\DSCResource\lab\LCM
 
-#Set-DscLocalConfigurationManager -ComputerName $computername -Path C:\DSCResource\Lab\LCM -Verbose -Credential Administrator
+#$creds = get-credential
+#Set-DscLocalConfigurationManager -ComputerName $computername -Path C:\DSCResource\Lab\LCM -Verbose -Credential $creds
 #Get-DscLocalConfigurationManager -CimSession $computername

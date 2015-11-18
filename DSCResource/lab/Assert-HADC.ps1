@@ -11,7 +11,7 @@ configuration AssertHADC
         [pscredential]$NewADUserCred
     )
     
-    Install-Module -Name xActiveDirectory,xNetworking,xComputerManagement -Force
+    #Install-Module -Name xActiveDirectory,xNetworking,xComputerManagement -Force
     Import-DscResource -ModuleName xActiveDirectory,xNetworking,xComputerManagement,PSDesiredStateConfiguration
     
     Node $AllNodes.Where{$_.Role -eq "Primary DC"}.Nodename
@@ -79,11 +79,11 @@ configuration AssertHADC
             Name = "RDC"
         }
 
-        xFirewall DisableFW
+        <#xFirewall DisableFW
         {
             Profile = 'All'
             Enabled = 'False'
-        }
+        }#>
     }
 
     Node $AllNodes.Where{$_.Role -eq "Replica DC"}.Nodename
@@ -141,11 +141,11 @@ configuration AssertHADC
             Name = "RDC"
         }
         
-        xFirewall DisableFW
+        <#xFirewall DisableFW
         {
             Profile = 'All'
             Enabled = 'False'
-        }
+        }#>
     }
 }
 
@@ -165,15 +165,15 @@ $ConfigData = @{
                 },
         
                 @{
-                    Nodename = "DSCLABDC1"
+                    Nodename = "DSCLABDC01"
                     Role = "Primary DC"
-                    HostName = "DSCLABDC1"
+                    HostName = "DSCLABDC01"
                 },
         
                 @{
-                    Nodename = "DSCLABDC2"
+                    Nodename = "DSCLABDC02"
                     Role = "Replica DC"
-                    HostName = "DSCLABDC2"
+                    HostName = "DSCLABDC02"
                 }
             )
         }
@@ -181,4 +181,6 @@ $ConfigData = @{
 AssertHADC -ConfigurationData $ConfigData -OutputPath C:\GIT\DesiredStateConfiguration\DSCResource\lab\DomainControllers\Config -Verbose
 
 #$creds = Get-Credential
-#Start-DscConfiguration -path C:\GIT\DesiredStateConfiguration\DSCResource\lab\DomainControllers\config -wait -verbose -credential $Creds
+#Start-DscConfiguration -path C:\GIT\DesiredStateConfiguration\DSCResource\lab\DomainControllers\config -wait -verbose -credential $creds -force
+#test-DscConfiguration -ComputerName DSCLabDC01 -Credential $creds
+

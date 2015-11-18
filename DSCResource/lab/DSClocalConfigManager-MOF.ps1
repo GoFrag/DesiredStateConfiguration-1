@@ -19,4 +19,6 @@ $Computername = 'DSCLABDC1','DSCLABDC2','DSCLABS1','DSCLABS2','DSCLABS3','DSCLAB
 LCMPush -OutputPath c:\GIT\DesiredStateConfiguration\DSCResource\lab\LCM
 
 #$creds = Get-Credential
-#Set-DscLocalConfigurationManager -ComputerName $computername -Path c:\GIT\DesiredStateConfiguration\DSCResource\lab\LCM -Verbose -Credential $creds
+#Set-DscLocalConfigurationManager -ComputerName $Computername -Path c:\GIT\DesiredStateConfiguration\DSCResource\lab\LCM -Verbose -Credential $creds
+
+#Enter-PSSession -ComputerName DSCLABDC1 -Credential DSCLABDC1\Administrator

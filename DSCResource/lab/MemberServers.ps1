@@ -39,6 +39,12 @@ configuration MemberServers
             Ensure = "Present"
             Name = "Telnet-Client"
         }
+        
+        WindowsFeature TelnetServer
+        {
+            Ensure = "Present"
+            Name = "Telnet-Server"
+        }
 
         WindowsFeature RemoteDifferentialCompression
         {
@@ -64,27 +70,27 @@ $ConfigData = @{
                 },
         
                 @{
-                    Nodename = "DSCLABS1"
+                    Nodename = "DSCLABS01"
                     Role = "MemberServer"
-                    HostName = "DSCLABS1"
+                    HostName = "DSCLABS01"
                 },
         
                 @{
-                    Nodename = "DSCLABS2"
+                    Nodename = "DSCLABS02"
                     Role = "MemberServer"
-                    HostName = "DSCLABS2"
+                    HostName = "DSCLABS02"
                 }
 
                 @{
-                    Nodename = "DSCLABS3"
+                    Nodename = "DSCLABS03"
                     Role = "MemberServer"
-                    HostName = "DSCLABS3"
+                    HostName = "DSCLABS03"
                 }
 
                 @{
-                    Nodename = "DSCLABS4"
+                    Nodename = "DSCLABS04"
                     Role = "MemberServer"
-                    HostName = "DSCLABS4"
+                    HostName = "DSCLABS04"
                 }
             )
         }

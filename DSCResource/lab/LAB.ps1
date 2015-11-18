@@ -11,8 +11,8 @@ configuration DSCLab
         [pscredential]$NewADUserCred
     )
     
-    Install-Module -Name xActiveDirectory,xNetworking,xComputerManagement -Force
-    Import-DscResource -ModuleName xActiveDirectory,xNetworking,xComputerManagement,PSDesiredStateConfiguration
+    Install-Module -Name xActiveDirectory,xNetworking,xComputerManagement,xPSDesiredStateConfiguration -Force
+    Import-DscResource -ModuleName xActiveDirectory,xNetworking,xComputerManagement,PSDesiredStateConfiguration,xPSDesiredStateConfiguration
     
     Node $AllNodes.Where{$_.Role -eq "Primary DC"}.Nodename
     {
@@ -59,12 +59,6 @@ configuration DSCLab
             Ensure = "Present"
             Name = "RSAT-ADDS"
             IncludeAllSubFeature = $True
-        }
-        
-        WindowsFeature DSCService
-        {
-            Ensure = "Present"
-            Name = "DSC-Service"
         }
 
         WindowsFeature TelnetClient
@@ -116,12 +110,6 @@ configuration DSCLab
             Name = "RSAT-ADDS"
             IncludeAllSubFeature = $True
         }
-        
-        WindowsFeature DSCService
-        {
-            Ensure = "Present"
-            Name = "DSC-Service"
-        }
 
         WindowsFeature TelnetClient
         {
@@ -135,6 +123,39 @@ configuration DSCLab
             Name = "RDC"
         }
         
+        WindowsFeature DSCService
+        {
+            Ensure = "Present"
+            Name = "DSC-Service"
+        }
+
+        WindowsFeature IISConsole {
+            Ensure = "Present"
+            Name   = "Web-Mgmt-Console"
+        }
+
+        xDscWebService PSDSCPullServer{
+            Ensure                  = "Present"
+            EndpointName            = "PSDSCPullServer"
+            Port                    = '8080'
+            PhysicalPath            = "$env:SystemDrive\inetpub\wwwroot\PSDSCPullServer"
+            CertificateThumbPrint   = "AllowUnencryptedTraffic"
+            ModulePath              = "$env:PROGRAMFILES\WindowsPowerShell\DscService\Modules"
+            ConfigurationPath       = "$env:PROGRAMFILES\WindowsPowerShell\DscService\Configuration"
+            State                   = "Started"
+            DependsOn               = "[WindowsFeature]DSCService"
+        }
+
+        xDscWebService PSDSCComplianceServer{
+            Ensure                  = "Present"
+            EndpointName            = "PSDSCComplianceServer"
+            Port                    = 9080
+            PhysicalPath            = "$env:SystemDrive\inetpub\wwwroot\PSDSCComplianceServer"
+            CertificateThumbPrint   = "AllowUnencryptedTraffic"
+            State                   = "Started"
+            IsComplianceServer      = $true
+            DependsOn               = ("[WindowsFeature]DSCService","[xDSCWebService]PSDSCPullServer")
+        }
     }
     
     Node $AllNodes.Where{$_.Role -eq "Member Server"}.Nodename
@@ -154,17 +175,17 @@ configuration DSCLab
             DomainName    = $Node.DomainName 
             Credential    = $domainCred  # Credential to join to domain 
         }   
-                
-        WindowsFeature DSCService
-        {
-            Ensure = "Present"
-            Name = "DSC-Service"
-        }
 
         WindowsFeature TelnetClient
         {
             Ensure = "Present"
             Name = "Telnet-Client"
+        }
+
+        WindowsFeature TelnetServer
+        {
+            Ensure = "Present"
+            Name = "Telnet-Server"
         }
 
         WindowsFeature RemoteDifferentialCompression
@@ -191,44 +212,44 @@ $ConfigData = @{
                 },
         
                 @{
-                    Nodename = "DSCLABDC1"
+                    Nodename = "DSCLABDC01"
                     Role = "Primary DC"
-                    HostName = "DSCLABDC1"
+                    HostName = "DSCLABDC01"
                 },
         
                 @{
-                    Nodename = "DSCLABDC2"
+                    Nodename = "DSCLABDC02"
                     Role = "Replica DC"
-                    HostName = "DSCLABDC2"
+                    HostName = "DSCLABDC02"
                 },
 
                 @{
-                    Nodename = "DSCLABS1"
+                    Nodename = "DSCLABS01"
                     Role = "Member Server"
-                    HostName = "DSCLABS1"
+                    HostName = "DSCLABS01"
                 },
 
                 @{
-                    Nodename = "DSCLABS2"
+                    Nodename = "DSCLABS02"
                     Role = "Member Server"
-                    HostName = "DSCLABS2"
+                    HostName = "DSCLABS02"
                 },
 
                 @{
-                    Nodename = "DSCLABS3"
+                    Nodename = "DSCLABS03"
                     Role = "Member Server"
-                    HostName = "DSCLABS3"
+                    HostName = "DSCLABS03"
                 },
 
                 @{
-                    Nodename = "DSCLABS4"
+                    Nodename = "DSCLABS04"
                     Role = "Member Server"
-                    HostName = "DSCLABS4"
+                    HostName = "DSCLABS04"
                 }
             )
         }
 
-DSCLab -ConfigurationData $ConfigData -OutputPath C:\GIT\DesiredStateConfiguration\DSCResource\lab\Config -Verbose
+DSCLab -ConfigurationData $ConfigData -OutputPath C:\GIT\DesiredStateConfiguration\DSCResource\lab\HostNames -Verbose
 
 #$creds = Get-Credential
 #Start-DscConfiguration -path C:\GIT\DesiredStateConfiguration\DSCResource\lab\config -wait -verbose -credential $Creds
