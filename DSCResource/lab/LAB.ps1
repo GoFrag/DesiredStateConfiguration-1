@@ -93,7 +93,7 @@ configuration DSCLab
             DomainUserCredential = $domainCred
 	        RetryCount = $Node.RetryCount
             RetryIntervalSec = $Node.RetryIntervalSec
-            DependsOn = "[WindowsFeature]ADDSInstall"
+            DependsOn = ("[WindowsFeature]ADDSInstall","[WindowsFeature]RSATADTOOLS")
         }
 
         xADDomainController SecondDC
@@ -101,7 +101,7 @@ configuration DSCLab
             DomainName = $Node.DomainName
             DomainAdministratorCredential = $domainCred
             SafemodeAdministratorPassword = $safemodeAdministratorCred
-            DependsOn = ("[xWaitForADDomain]DscForestWait","[WindowsFeature]ADDSInstall")
+            DependsOn = "[xWaitForADDomain]DscForestWait"
         }
         
        WindowsFeature RSATADTOOLS
@@ -175,7 +175,6 @@ configuration DSCLab
             Name          = $node.HostName
             DomainName    = $Node.DomainName 
             Credential    = $domainCred  # Credential to join to domain
-            #DependsOn = '[WindowsFeature]RSATADPoSH'
         }   
 
         WindowsFeature RSATADPoSH
