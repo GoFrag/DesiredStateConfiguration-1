@@ -54,10 +54,10 @@ configuration DSCLab
             DependsOn = "[xWaitForADDomain]DscForestWait"
         }
         
-        WindowsFeature RSATADDS
+        WindowsFeature RSATADTOOLS
         {
             Ensure = "Present"
-            Name = "RSAT-ADDS"
+            Name = "RSAT-AD-TOOLS"
             IncludeAllSubFeature = $True
         }
 
@@ -101,13 +101,13 @@ configuration DSCLab
             DomainName = $Node.DomainName
             DomainAdministratorCredential = $domainCred
             SafemodeAdministratorPassword = $safemodeAdministratorCred
-            DependsOn = "[xWaitForADDomain]DscForestWait"
+            DependsOn = ("[xWaitForADDomain]DscForestWait","[WindowsFeature]ADDSInstall")
         }
         
-        WindowsFeature RSATADDS
+       WindowsFeature RSATADTOOLS
         {
             Ensure = "Present"
-            Name = "RSAT-ADDS"
+            Name = "RSAT-AD-TOOLS"
             IncludeAllSubFeature = $True
         }
 
@@ -167,16 +167,24 @@ configuration DSCLab
             DomainUserCredential = $domainCred
             RetryCount = $Node.RetryCount
             RetryIntervalSec = $Node.RetryIntervalSec
+            DependsOn = '[WindowsFeature]RSATADPoSH'
         }
         
         xComputer JoinDomain 
         { 
             Name          = $node.HostName
             DomainName    = $Node.DomainName 
-            Credential    = $domainCred  # Credential to join to domain 
+            Credential    = $domainCred  # Credential to join to domain
+            #DependsOn = '[WindowsFeature]RSATADPoSH'
         }   
 
-        WindowsFeature TelnetClient
+        WindowsFeature RSATADPoSH
+        {
+            Ensure = "Present"
+            Name = "RSAT-AD-Powershell"
+        }
+
+         WindowsFeature TelnetClient
         {
             Ensure = "Present"
             Name = "Telnet-Client"
@@ -249,7 +257,7 @@ $ConfigData = @{
             )
         }
 
-DSCLab -ConfigurationData $ConfigData -OutputPath C:\GIT\DesiredStateConfiguration\DSCResource\lab\HostNames -Verbose
+DSCLab -ConfigurationData $ConfigData -OutputPath C:\GIT\DesiredStateConfiguration\DSCResource\lab\config -Verbose
 
 #$creds = Get-Credential
-#Start-DscConfiguration -path C:\GIT\DesiredStateConfiguration\DSCResource\lab\config -wait -verbose -credential $Creds
+#Start-DscConfiguration -path C:\GIT\DesiredStateConfiguration\DSCResource\lab\config -wait -verbose -credential $Creds -force
