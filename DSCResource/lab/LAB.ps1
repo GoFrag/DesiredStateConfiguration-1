@@ -9,18 +9,15 @@ configuration DSCLab
         [pscredential]$domainCred,
 	    [Parameter(Mandatory)]
         [pscredential]$NewADUserCred
-    )
+        )
     
-    Install-Module -Name xActiveDirectory,xNetworking,xComputerManagement,xPSDesiredStateConfiguration -Force
+    Update-Module -Verbose -Force
+    Install-Module -Name xActiveDirectory,xNetworking,xComputerManagement,xPSDesiredStateConfiguration -verbose
     Import-DscResource -ModuleName xActiveDirectory,xNetworking,xComputerManagement,PSDesiredStateConfiguration,xPSDesiredStateConfiguration
     
     Node $AllNodes.Where{$_.Role -eq "Primary DC"}.Nodename
     {
-        xComputer NewName
-        { 
-            Name = $node.HostName
-        }
-
+        
         WindowsFeature ADDSInstall
         {
             Ensure = "Present"
@@ -32,6 +29,7 @@ configuration DSCLab
             DomainName = $Node.DomainName
             DomainAdministratorCredential = $domainCred
             SafemodeAdministratorPassword = $safemodeAdministratorCred
+            DomainNetbiosName = $node.NetbiosName
             DependsOn = "[WindowsFeature]ADDSInstall"
         }
 
@@ -76,10 +74,6 @@ configuration DSCLab
 
     Node $AllNodes.Where{$_.Role -eq "Replica DC"}.Nodename
     {
-        xComputer NewName
-        { 
-            Name = $node.HostName
-        }
 
         WindowsFeature ADDSInstall
         {
@@ -167,12 +161,12 @@ configuration DSCLab
             DomainUserCredential = $domainCred
             RetryCount = $Node.RetryCount
             RetryIntervalSec = $Node.RetryIntervalSec
-            DependsOn = '[WindowsFeature]RSATADPoSH'
+            DependsOn = "[WindowsFeature]RSATADPoSH"
         }
         
         xComputer JoinDomain 
         { 
-            Name          = $node.HostName
+            Name          = $node.NodeName
             DomainName    = $Node.DomainName 
             Credential    = $domainCred  # Credential to join to domain
         }   
@@ -189,12 +183,6 @@ configuration DSCLab
             Name = "Telnet-Client"
         }
 
-        WindowsFeature TelnetServer
-        {
-            Ensure = "Present"
-            Name = "Telnet-Server"
-        }
-
         WindowsFeature RemoteDifferentialCompression
         {
             Ensure = "Present"
@@ -209,54 +197,47 @@ $ConfigData = @{
     AllNodes = @(
                 @{
                     Nodename = '*'
-                    DomainName = 'dsclab.local'
-                    RetryCount = 30
-                    RetryIntervalSec = 60
+                    DomainName = 'DSCLab.local'
+                    RetryCount = 60
+                    RetryIntervalSec = 120
                     PSDscAllowPlainTextPassword = $true
-                    NIC = 'Ethernet0'
-                    AddressFamily = 'IPV4'
                     PSDscAllowDomainUser = $true
                 },
         
                 @{
                     Nodename = "DSCLABDC01"
                     Role = "Primary DC"
-                    HostName = "DSCLABDC01"
-                },
+                    },
         
                 @{
                     Nodename = "DSCLABDC02"
                     Role = "Replica DC"
-                    HostName = "DSCLABDC02"
-                },
+                    },
 
                 @{
                     Nodename = "DSCLABS01"
                     Role = "Member Server"
-                    HostName = "DSCLABS01"
-                },
+                    },
 
                 @{
                     Nodename = "DSCLABS02"
                     Role = "Member Server"
-                    HostName = "DSCLABS02"
-                },
+                    },
 
                 @{
                     Nodename = "DSCLABS03"
                     Role = "Member Server"
-                    HostName = "DSCLABS03"
-                },
+                    },
 
                 @{
                     Nodename = "DSCLABS04"
                     Role = "Member Server"
-                    HostName = "DSCLABS04"
-                }
+                    }
             )
         }
 
 DSCLab -ConfigurationData $ConfigData -OutputPath C:\GIT\DesiredStateConfiguration\DSCResource\lab\config -Verbose
 
+#$creds = $null
 #$creds = Get-Credential
-#Start-DscConfiguration -path C:\GIT\DesiredStateConfiguration\DSCResource\lab\config -wait -verbose -credential $Creds -force
+#Start-DscConfiguration -path C:\GIT\DesiredStateConfiguration\DSCResource\lab\config -wait -verbose -credential $Creds #-force

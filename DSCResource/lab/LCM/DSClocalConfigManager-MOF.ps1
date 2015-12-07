@@ -1,23 +1,24 @@
 ﻿[DSCLocalConfigurationManager()]
 Configuration LCMPUSH 
 {	
-	Node $Computername
+	Node $computername
 	{
 		Settings
 		{
 			AllowModuleOverwrite = $True
-            ConfigurationMode = 'ApplyOnly'
+            ConfigurationMode = 'ApplyAndMonitor'
 			RefreshMode = 'Push'
             RebootNodeIfNeeded = $True
+            ActionAfterReboot = 'ContinueConfiguration'
 		}
 	}
 }
 
+$Computername = $null
 $Computername = 'DSCLabDC01','DSCLabDC02','DSCLabS01','DSCLabS02','DSCLabS03','DSCLabS04'
 
 # Create the Computer.Meta.Mof in folder
 LCMPush -OutputPath C:\GIT\DesiredStateConfiguration\DSCResource\lab\LCM
 
-#$creds = get-credential
-#Set-DscLocalConfigurationManager -ComputerName $computername -Path C:\DSCResource\Lab\LCM -Verbose -Credential $creds
-#Get-DscLocalConfigurationManager -CimSession $computername
+$creds = get-credential
+#Set-DscLocalConfigurationManager -ComputerName $computername -Path C:\GIT\DesiredStateConfiguration\DSCResource\lab\LCM\ -Verbose -Credential $creds

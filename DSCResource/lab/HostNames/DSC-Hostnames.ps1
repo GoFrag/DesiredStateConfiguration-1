@@ -1,13 +1,13 @@
 ﻿configuration DSCLab
 {
-    #Install-Module -Name xComputerManagement-Force
+    Install-Module -Name xComputerManagement
     Import-DscResource -ModuleName xComputerManagement
 
 Node $AllNodes.Where{$_.Role -eq "Primary DC"}.Nodename
     {
         xComputer NewName
         { 
-            Name = $node.HostName
+            Name = $node.NodeName
         }
     }
     
@@ -15,14 +15,14 @@ Node $AllNodes.Where{$_.Role -eq "Replica DC"}.Nodename
     {
         xComputer NewName
         { 
-            Name = $node.HostName
+            Name = $node.NodeName
         }
     }
     
 Node $AllNodes.Where{$_.Role -eq "Member Server"}.Nodename
     {xComputer NewName
         { 
-            Name = $node.HostName
+            Name = $node.NodeName
         }
     }
       
@@ -68,4 +68,4 @@ $ConfigData = @{
 DSCLab -ConfigurationData $ConfigData -OutputPath C:\GIT\DesiredStateConfiguration\DSCResource\lab\HostNames -Verbose
 
 #$creds = Get-Credential
-#Start-DscConfiguration -path C:\GIT\DesiredStateConfiguration\DSCResource\lab\HostName -wait -verbose -credential $Creds
+#Start-DscConfiguration -path C:\GIT\DesiredStateConfiguration\DSCResource\lab\HostNames -wait -verbose -credential $Creds -force
