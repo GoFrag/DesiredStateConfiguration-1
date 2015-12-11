@@ -20,5 +20,5 @@ $Computername = 'DSCLabDC01','DSCLabDC02','DSCLabS01','DSCLabS02','DSCLabS03','D
 # Create the Computer.Meta.Mof in folder
 LCMPush -OutputPath C:\GIT\DesiredStateConfiguration\DSCResource\lab\LCM
 
-$creds = get-credential
+#$creds = get-credential
 #Set-DscLocalConfigurationManager -ComputerName $computername -Path C:\GIT\DesiredStateConfiguration\DSCResource\lab\LCM\ -Verbose -Credential $creds
