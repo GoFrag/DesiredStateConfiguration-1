@@ -25,6 +25,13 @@ Node $AllNodes.Where{$_.Role -eq "Member Server"}.Nodename
             Name = $node.NodeName
         }
     }
+
+Node $AllNodes.Where{$_.Role -eq "Pull Server"}.Nodename
+    {xComputer NewName
+        { 
+            Name = $node.NodeName
+        }
+    }
       
 $ConfigData = @{
     AllNodes = @(
@@ -60,10 +67,16 @@ $ConfigData = @{
                 @{
                     Nodename = "DSCLABS04"
                     Role = "Member Server"
+                },
+
+                @{
+                    Nodename = "DSCLABPULL01"
+                    Role = "Pull Server"
                 }
             )
         }
     }
+
 
 DSCLab -ConfigurationData $ConfigData -OutputPath C:\GIT\DesiredStateConfiguration\DSCResource\lab\HostNames -Verbose
 

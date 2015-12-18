@@ -10,10 +10,17 @@ Configuration LCMPUSH
 			RefreshMode = 'Push'
             RebootNodeIfNeeded = $True
 		}
+
+        ConfigurationRepositoryWeb DSCHTTP {
+                #Name = 'DSCHTTP'
+                ServerURL = 'http://DSCLABPull01:8080/PSDSCPullServer.svc'
+                AllowUnsecureConnection = $true
+        }
+
 	}
 }
 
-$Computername = 'DSCLABDC1','DSCLABDC2','DSCLABS1','DSCLABS2','DSCLABS3','DSCLABS4'
+$Computername = 'DSCLABDC01','DSCLABDC02','DSCLABS01','DSCLABS02','DSCLABS03','DSCLABS04','DSCLABPULL01'
 
 # Create the Computer.Meta.Mof in folder
 LCMPush -OutputPath c:\GIT\DesiredStateConfiguration\DSCResource\lab\LCM

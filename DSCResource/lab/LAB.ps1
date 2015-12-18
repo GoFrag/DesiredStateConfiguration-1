@@ -11,7 +11,7 @@ configuration DSCLab
         [pscredential]$NewADUserCred
         )
     
-    Update-Module -Verbose -Force
+#    Update-Module -Verbose -Force
     Install-Module -Name xActiveDirectory,xNetworking,xComputerManagement,xPSDesiredStateConfiguration -verbose
     Import-DscResource -ModuleName xActiveDirectory,xNetworking,xComputerManagement,PSDesiredStateConfiguration,xPSDesiredStateConfiguration
     
@@ -59,6 +59,12 @@ configuration DSCLab
             IncludeAllSubFeature = $True
         }
 
+        WindowsFeature TelnetServer
+        {
+            Ensure = "Present"
+            Name = "Telnet-Server"
+        }
+
         WindowsFeature TelnetClient
         {
             Ensure = "Present"
@@ -104,6 +110,61 @@ configuration DSCLab
             Name = "RSAT-AD-TOOLS"
             IncludeAllSubFeature = $True
         }
+        
+        WindowsFeature TelnetServer
+        {
+            Ensure = "Present"
+            Name = "Telnet-Server"
+        }
+
+        WindowsFeature TelnetClient
+        {
+            Ensure = "Present"
+            Name = "Telnet-Client"
+        }
+
+        WindowsFeature RemoteDifferentialCompression
+        {
+            Ensure = "Present"
+            Name = "RDC"
+        }
+        
+        WindowsFeature DSCService
+        {
+            Ensure = "Present"
+            Name = "DSC-Service"
+        }
+    }
+   
+    Node $AllNodes.Where{$_.Role -eq "Pull Server"}.Nodename
+    {
+        xWaitForADDomain DscForestWait
+        {
+            DomainName = $Node.DomainName
+            DomainUserCredential = $domainCred
+            RetryCount = $Node.RetryCount
+            RetryIntervalSec = $Node.RetryIntervalSec
+            DependsOn = "[WindowsFeature]RSATADPoSH"
+        }
+        
+        xComputer JoinDomain 
+        { 
+            Name          = $node.NodeName
+            DomainName    = $Node.DomainName 
+            Credential    = $domainCred  # Credential to join to domain
+        }   
+
+        WindowsFeature RSATADPoSH
+        {
+            Ensure = "Present"
+            Name = "RSAT-AD-Powershell"
+        }
+
+        WindowsFeature TelnetServer
+        {
+            Ensure = "Present"
+            Name = "Telnet-Server"
+        }
 
         WindowsFeature TelnetClient
         {
@@ -123,12 +184,14 @@ configuration DSCLab
             Name = "DSC-Service"
         }
 
-        WindowsFeature IISConsole {
+        WindowsFeature IISConsole
+        {
             Ensure = "Present"
             Name   = "Web-Mgmt-Console"
         }
 
-        xDscWebService PSDSCPullServer{
+        xDscWebService PSDSCPullServer
+        {
             Ensure                  = "Present"
             EndpointName            = "PSDSCPullServer"
             Port                    = '8080'
@@ -140,7 +203,8 @@ configuration DSCLab
             DependsOn               = "[WindowsFeature]DSCService"
         }
 
-        xDscWebService PSDSCComplianceServer{
+        xDscWebService PSDSCComplianceServer
+        {
             Ensure                  = "Present"
             EndpointName            = "PSDSCComplianceServer"
             Port                    = 9080
@@ -150,8 +214,8 @@ configuration DSCLab
             IsComplianceServer      = $true
             DependsOn               = ("[WindowsFeature]DSCService","[xDSCWebService]PSDSCPullServer")
         }
-    }
-    
+        }
+        
     Node $AllNodes.Where{$_.Role -eq "Member Server"}.Nodename
     {
       
@@ -202,7 +266,7 @@ $ConfigData = @{
                     RetryIntervalSec = 120
                     PSDscAllowPlainTextPassword = $true
                     PSDscAllowDomainUser = $true
-                },
+                    },
         
                 @{
                     Nodename = "DSCLABDC01"
@@ -232,6 +296,11 @@ $ConfigData = @{
                 @{
                     Nodename = "DSCLABS04"
                     Role = "Member Server"
+                    },
+                
+                @{
+                    Nodename = "DSCLABPull01"
+                    Role = "Pull Server"
                     }
             )
         }
