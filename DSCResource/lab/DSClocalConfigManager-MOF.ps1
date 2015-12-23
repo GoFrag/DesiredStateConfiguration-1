@@ -20,12 +20,12 @@ Configuration LCMPUSH
 	}
 }
 
-$Computername = 'DSCLABDC01','DSCLABDC02','DSCLABS01','DSCLABS02','DSCLABS03','DSCLABS04','DSCLABPULL01'
+$Computername = 'DSCLABDC01','DSCLABDC02','DSCLABPULL01'
 
 # Create the Computer.Meta.Mof in folder
 LCMPush -OutputPath c:\GIT\DesiredStateConfiguration\DSCResource\lab\LCM
 
-#$creds = Get-Credential
+#$creds = Get-Credential0
 #Set-DscLocalConfigurationManager -ComputerName $Computername -Path c:\GIT\DesiredStateConfiguration\DSCResource\lab\LCM -Verbose -Credential $creds
 
 #Enter-PSSession -ComputerName DSCLABDC1 -Credential DSCLABDC1\Administrator

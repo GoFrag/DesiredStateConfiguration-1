@@ -11,7 +11,6 @@ configuration DSCLab
         [pscredential]$NewADUserCred
         )
     
-#    Update-Module -Verbose -Force
     Install-Module -Name xActiveDirectory,xNetworking,xComputerManagement,xPSDesiredStateConfiguration -verbose
     Import-DscResource -ModuleName xActiveDirectory,xNetworking,xComputerManagement,PSDesiredStateConfiguration,xPSDesiredStateConfiguration
     
@@ -27,10 +26,18 @@ configuration DSCLab
             ValueType = "Dword"
         }
         
+        WindowsFeature RSATADTOOLS
+        {
+            Ensure = "Present"
+            Name = "RSAT-ADDS-TOOLS"
+            IncludeAllSubFeature = $True
+        }
+        
         WindowsFeature ADDSInstall
         {
             Ensure = "Present"
             Name = "AD-Domain-Services"
+            DependsOn = "[WindowsFeature]RSATADTOOLS"
         }
 
         xADDomain FirstDS
@@ -39,7 +46,7 @@ configuration DSCLab
             DomainAdministratorCredential = $domainCred
             SafemodeAdministratorPassword = $safemodeAdministratorCred
             DomainNetbiosName = $node.NetbiosName
-            DependsOn = ("[WindowsFeature]ADDSInstall","[WindowsFeature]RSATADTOOLS")
+            DependsOn = "[WindowsFeature]ADDSInstall"
         }
 
         xWaitForADDomain DscForestWait
@@ -61,19 +68,6 @@ configuration DSCLab
             DependsOn = "[xWaitForADDomain]DscForestWait"
         }
         
-        WindowsFeature RSATADTOOLS
-        {
-            Ensure = "Present"
-            Name = "RSAT-AD-TOOLS"
-            IncludeAllSubFeature = $True
-        }
-
-        WindowsFeature TelnetServer
-        {
-            Ensure = "Present"
-            Name = "Telnet-Server"
-        }
-
         WindowsFeature TelnetClient
         {
             Ensure = "Present"
@@ -99,10 +93,18 @@ configuration DSCLab
             ValueType = "Dword"
         }
         
+        WindowsFeature RSATADTOOLS
+        {
+            Ensure = "Present"
+            Name = "RSAT-ADDS-TOOLS"
+            IncludeAllSubFeature = $True
+        }
+        
         WindowsFeature ADDSInstall
         {
             Ensure = "Present"
             Name = "AD-Domain-Services"
+            DependsOn = "[WindowsFeature]RSATADTOOLS"
         }
 
         xWaitForADDomain DscForestWait
@@ -111,7 +113,7 @@ configuration DSCLab
             DomainUserCredential = $domainCred
 	        RetryCount = $Node.RetryCount
             RetryIntervalSec = $Node.RetryIntervalSec
-            DependsOn = ("[WindowsFeature]ADDSInstall","[WindowsFeature]RSATADTOOLS")
+            DependsOn = "[WindowsFeature]ADDSInstall"
         }
 
         xADDomainController SecondDC
@@ -122,19 +124,6 @@ configuration DSCLab
             DependsOn = "[xWaitForADDomain]DscForestWait"
         }
         
-       WindowsFeature RSATADTOOLS
-        {
-            Ensure = "Present"
-            Name = "RSAT-AD-TOOLS"
-            IncludeAllSubFeature = $True
-        }
-        
-        WindowsFeature TelnetServer
-        {
-            Ensure = "Present"
-            Name = "Telnet-Server"
-        }
-
         WindowsFeature TelnetClient
         {
             Ensure = "Present"
@@ -150,6 +139,7 @@ configuration DSCLab
    
     Node $AllNodes.Where{$_.Role -eq "Pull Server"}.Nodename
     {
+        
         Registry EdgeAsAdmin
         {
             Ensure = "Present"
@@ -159,62 +149,16 @@ configuration DSCLab
             ValueType = "Dword"
         }
         
-        xWaitForADDomain DscForestWait
-        {
-            DomainName = $Node.DomainName
-            DomainUserCredential = $domainCred
-            RetryCount = $Node.RetryCount
-            RetryIntervalSec = $Node.RetryIntervalSec
-            DependsOn = "[WindowsFeature]RSATADPoSH"
-        }
-        
-        xComputer JoinDomain 
-        { 
-            Name          = $node.NodeName
-            DomainName    = $Node.DomainName 
-            Credential    = $domainCred  # Credential to join to domain
-        }   
-
-        WindowsFeature RSATADPoSH
-        {
-            Ensure = "Present"
-            Name = "RSAT-AD-Powershell"
-        }
-
-        WindowsFeature TelnetServer
-        {
-            Ensure = "Present"
-            Name = "Telnet-Server"
-        }
-
-        WindowsFeature TelnetClient
-        {
-            Ensure = "Present"
-            Name = "Telnet-Client"
-        }
-
-        WindowsFeature RemoteDifferentialCompression
-        {
-            Ensure = "Present"
-            Name = "RDC"
-        }
-        
         WindowsFeature DSCService
         {
             Ensure = "Present"
             Name = "DSC-Service"
-        }
-
-         WindowsFeature IIS{
-            Name = "web-server"
-            Ensure = "Present"
         }
         
         WindowsFeature IISConsole
         {
             Ensure = "Present"
             Name   = "Web-Mgmt-Console"
-            DependsOn = '[WindowsFeature]IIS'
         }
 
         xDscWebService PSDSCPullServer
@@ -227,66 +171,7 @@ configuration DSCLab
             ModulePath              = "$env:PROGRAMFILES\WindowsPowerShell\DscService\Modules"
             ConfigurationPath       = "$env:PROGRAMFILES\WindowsPowerShell\DscService\Configuration"
             State                   = "Started"
-            DependsOn               = ("[WindowsFeature]DSCService","[WindowsFeature]IIS")
-        }
-
-        xDscWebService PSDSCComplianceServer
-        {
-            Ensure                  = "Present"
-            EndpointName            = "PSDSCComplianceServer"
-            Port                    = 9080
-            PhysicalPath            = "$env:SystemDrive\inetpub\wwwroot\PSDSCComplianceServer"
-            CertificateThumbPrint   = "AllowUnencryptedTraffic"
-            State                   = "Started"
-            IsComplianceServer      = $true
-            DependsOn               = ("[WindowsFeature]DSCService","[xDSCWebService]PSDSCPullServer")
-        }
-    }
-        
-    Node $AllNodes.Where{$_.Role -eq "Member Server"}.Nodename
-    {
-      
-        Registry EdgeAsAdmin
-        {
-            Ensure = "Present"
-            Key = "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System"
-            ValueName = "FilterAdministratorToken"
-            ValueData = "1"
-            ValueType = "Dword"
-        }
-        
-        xWaitForADDomain DscForestWait
-        {
-            DomainName = $Node.DomainName
-            DomainUserCredential = $domainCred
-            RetryCount = $Node.RetryCount
-            RetryIntervalSec = $Node.RetryIntervalSec
-            DependsOn = "[WindowsFeature]RSATADPoSH"
-        }
-        
-        xComputer JoinDomain 
-        { 
-            Name          = $node.NodeName
-            DomainName    = $Node.DomainName 
-            Credential    = $domainCred  # Credential to join to domain
-        }   
-
-        WindowsFeature RSATADPoSH
-        {
-            Ensure = "Present"
-            Name = "RSAT-AD-Powershell"
-        }
-
-         WindowsFeature TelnetClient
-        {
-            Ensure = "Present"
-            Name = "Telnet-Client"
-        }
-
-        WindowsFeature RemoteDifferentialCompression
-        {
-            Ensure = "Present"
-            Name = "RDC"
+            DependsOn               = "[WindowsFeature]DSCService"
         }
     }
 }
@@ -315,35 +200,15 @@ $ConfigData = @{
                     },
 
                 @{
-                    Nodename = "DSCLABS01"
-                    Role = "Member Server"
-                    },
-
-                @{
-                    Nodename = "DSCLABS02"
-                    Role = "Member Server"
-                    },
-
-                @{
-                    Nodename = "DSCLABS03"
-                    Role = "Member Server"
-                    },
-
-                @{
-                    Nodename = "DSCLABS04"
-                    Role = "Member Server"
-                    },
-                
-                @{
                     Nodename = "DSCLABPull01"
                     Role = "Pull Server"
                     }
             )
         }
 
-DSCLab -ConfigurationData $ConfigData -OutputPath C:\GIT\DesiredStateConfiguration\DSCResource\lab\ -Verbose
+DSCLab -ConfigurationData $ConfigData -OutputPath C:\GIT\DesiredStateConfiguration\DSCResource\labrevised\ -Verbose
 
 #$creds = $null
 #$creds = Get-Credential
-#Start-DscConfiguration -path C:\GIT\DesiredStateConfiguration\DSCResource\lab\config -wait -verbose -credential $Creds -force
+#Start-DscConfiguration -path C:\GIT\DesiredStateConfiguration\DSCResource\labrevised -wait -verbose -credential $Creds #-force
 #Start-DscConfiguration -path C:\GIT\DesiredStateConfiguration\DSCResource\lab\config -ComputerName DSCLABPull01 -wait -verbose -credential $Creds -force

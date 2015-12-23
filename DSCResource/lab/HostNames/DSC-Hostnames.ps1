@@ -80,5 +80,6 @@ $ConfigData = @{
 
 DSCLab -ConfigurationData $ConfigData -OutputPath C:\GIT\DesiredStateConfiguration\DSCResource\lab\HostNames -Verbose
 
+
 #$creds = Get-Credential
 #Start-DscConfiguration -path C:\GIT\DesiredStateConfiguration\DSCResource\lab\HostNames -wait -verbose -credential $Creds -force

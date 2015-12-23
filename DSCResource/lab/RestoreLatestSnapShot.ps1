@@ -1,4 +1,4 @@
-﻿#Get-VM -ComputerName CC-DYEO | Foreach-Object { $_ | Get-VMSnapshot | Sort CreationTime | Select -Last 1 | Restore-VMSnapshot -Confirm:$false }
+﻿#Get-VM -ComputerName CC-DYEO | Foreach-Object { $_ | Get-VMSnapshot -Name Master | Restore-VMSnapshot -Confirm:$false }
 
 
 #Start-VM -ComputerName CC-DYEO -Name DSC*
@@ -6,7 +6,7 @@
 
 #Get-VM -ComputerName CC-DYEO | Foreach-Object { $_ | Get-VMSnapshot | Remove-VMSnapshot -Confirm:$false}
 
-#get-vm DSC* -ComputerName CC-DYEO | checkpoint-vm -SnapshotName "Vanilla $((Get-Date).toshortdatestring())" –AsJob
+#get-vm DSC* -ComputerName CC-DYEO | checkpoint-vm -SnapshotName "Master $((Get-Date).toshortdatestring())" -Verbose
 
 #Checkpoint-VM -Name Test -SnapshotName Vanilla
 
@@ -18,3 +18,5 @@ foreach ($vm in $vms){
 Checkpoint-VM -Name $vm -AsJob -ComputerName cc-dyeo -SnapshotName Master
 
 }
+
+Get-Job
