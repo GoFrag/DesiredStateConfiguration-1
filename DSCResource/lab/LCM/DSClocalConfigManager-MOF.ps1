@@ -15,7 +15,7 @@ Configuration LCMPUSH
 }
 
 $Computername = $null
-$Computername = 'DSCLabDC01','DSCLabDC02','DSCLabS01','DSCLabS02','DSCLabS03','DSCLabS04'
+$Computername = 'DSCLabPull01' #'DSCLabDC01','DSCLabDC02','DSCLabS01','DSCLabS02','DSCLabS03','DSCLabS04'
 
 # Create the Computer.Meta.Mof in folder
 LCMPush -OutputPath C:\GIT\DesiredStateConfiguration\DSCResource\lab\LCM

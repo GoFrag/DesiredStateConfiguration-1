@@ -6,17 +6,6 @@
 
     Node $Computername
     {
-        WindowsFeature DSCServiceFeature
-        {
-            Ensure = "Present"
-            Name   = "DSC-Service"
-        }
-
-        WindowsFeature IISConsole {
-            Ensure = "Present"
-            Name   = "Web-Mgmt-Console"
-        }
-
         xDscWebService PSDSCPullServer
         {
             Ensure                  = "Present"
@@ -50,5 +39,7 @@ $Computername = 'DSCLABPULL01'
 
 HTTPPullServer -ConfigurationData $ConfigData -OutputPath C:\GIT\DesiredStateConfiguration\DSCResource\lab\HTTPPullServer  -Verbose
 #$creds = Get-Credential
-#Start-DscConfiguration -Path C:\GIT\DesiredStateConfiguration\DSCResource\lab\HTTPPullServer -Verbose -Wait -credential $Creds
+#Start-DscConfiguration -Path C:\GIT\DesiredStateConfiguration\DSCResource\lab\HTTPPullServer -Verbose -Wait -credential $Creds -force
 
+
+Exit
