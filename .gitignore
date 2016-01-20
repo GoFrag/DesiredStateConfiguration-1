@@ -111,6 +111,9 @@ _NCrunch_*
 *.mm.*
 AutoTest.Net/
 
+# DSCMMOFFiles
+*.mof
+
 # Web workbench (sass)
 .sass-cache/
 

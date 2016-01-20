@@ -77,9 +77,7 @@ $ConfigData = @{
         }
 
 
-DSCLab_Hostnames -ConfigurationData $ConfigData -OutputPath "C:\Users\dyeo\OneDrive - Imperial College London\DesiredStateConfiguration\Test\Environment\Lab\Hostnames\" -Verbose
-
-
+DSCLab_Hostnames -ConfigurationData $ConfigData -OutputPath "C:\Users\dyeo\OneDrive - Imperial College London\DesiredStateConfiguration\Environment\Lab\Hostnames" -Verbose
 
 $Computername = $null
 $Computername = 'DSCLabDC01','DSCLabDC02','DSCLabS01','DSCLabS02','DSCLabS03','DSCLabS04','DSCLabPull01'

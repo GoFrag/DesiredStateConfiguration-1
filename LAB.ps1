@@ -12,11 +12,17 @@ configuration DSCLab
         )
     
 #    Update-Module -Verbose -Force
-    Install-Module -Name xActiveDirectory,xNetworking,xComputerManagement,xPSDesiredStateConfiguration -verbose
-    Import-DscResource -ModuleName xActiveDirectory,xNetworking,xComputerManagement,PSDesiredStateConfiguration,xPSDesiredStateConfiguration
+    Install-Module -Name xActiveDirectory,xNetworking,xComputerManagement,xPSDesiredStateConfiguration,xRemoteDesktopAdmin -verbose
+    Import-DscResource -ModuleName xActiveDirectory,xNetworking,xComputerManagement,PSDesiredStateConfiguration,xPSDesiredStateConfiguration,xRemoteDesktopAdmin
     
     Node $AllNodes.Where{$_.Role -eq "Primary DC"}.Nodename
     {
+
+        xRemoteDesktopAdmin RemoteDesktopSettings
+        {
+           Ensure = 'Present'
+           UserAuthentication = 'Secure'
+        }
         
         Registry EdgeAsAdmin
         {
@@ -68,18 +74,6 @@ configuration DSCLab
             IncludeAllSubFeature = $True
         }
 
-        WindowsFeature TelnetServer
-        {
-            Ensure = "Present"
-            Name = "Telnet-Server"
-        }
-
-        WindowsFeature TelnetClient
-        {
-            Ensure = "Present"
-            Name = "Telnet-Client"
-        }
-
         WindowsFeature RemoteDifferentialCompression
         {
             Ensure = "Present"
@@ -90,6 +84,12 @@ configuration DSCLab
     Node $AllNodes.Where{$_.Role -eq "Replica DC"}.Nodename
     {
 
+        xRemoteDesktopAdmin RemoteDesktopSettings
+        {
+           Ensure = 'Present'
+           UserAuthentication = 'Secure'
+        }
+        
         Registry EdgeAsAdmin
         {
             Ensure = "Present"
@@ -128,18 +128,6 @@ configuration DSCLab
             Name = "RSAT-AD-TOOLS"
             IncludeAllSubFeature = $True
         }
-        
-        WindowsFeature TelnetServer
-        {
-            Ensure = "Present"
-            Name = "Telnet-Server"
-        }
-
-        WindowsFeature TelnetClient
-        {
-            Ensure = "Present"
-            Name = "Telnet-Client"
-        }
 
         WindowsFeature RemoteDifferentialCompression
         {
@@ -150,6 +138,12 @@ configuration DSCLab
    
     Node $AllNodes.Where{$_.Role -eq "Pull Server"}.Nodename
     {
+        xRemoteDesktopAdmin RemoteDesktopSettings
+        {
+           Ensure = 'Present'
+           UserAuthentication = 'Secure'
+        }
+        
         Registry EdgeAsAdmin
         {
             Ensure = "Present"
@@ -180,19 +174,7 @@ configuration DSCLab
             Ensure = "Present"
             Name = "RSAT-AD-Powershell"
         }
-
-        WindowsFeature TelnetServer
-        {
-            Ensure = "Present"
-            Name = "Telnet-Server"
-        }
-
-        WindowsFeature TelnetClient
-        {
-            Ensure = "Present"
-            Name = "Telnet-Client"
-        }
-
+        
         WindowsFeature RemoteDifferentialCompression
         {
             Ensure = "Present"
@@ -234,18 +216,23 @@ configuration DSCLab
         {
             Ensure                  = "Present"
             EndpointName            = "PSDSCComplianceServer"
-            Port                    = 9080
+            Port                    = '8090'
             PhysicalPath            = "$env:SystemDrive\inetpub\wwwroot\PSDSCComplianceServer"
             CertificateThumbPrint   = "AllowUnencryptedTraffic"
             State                   = "Started"
             IsComplianceServer      = $true
-            DependsOn               = ("[WindowsFeature]DSCService","[xDSCWebService]PSDSCPullServer")
+            DependsOn               = "[xDSCWebService]PSDSCPullServer"
         }
     }
         
     Node $AllNodes.Where{$_.Role -eq "Member Server"}.Nodename
     {
-      
+        xRemoteDesktopAdmin RemoteDesktopSettings
+        {
+           Ensure = 'Present'
+           UserAuthentication = 'Secure'
+        }
+        
         Registry EdgeAsAdmin
         {
             Ensure = "Present"
@@ -275,12 +262,6 @@ configuration DSCLab
         {
             Ensure = "Present"
             Name = "RSAT-AD-Powershell"
-        }
-
-         WindowsFeature TelnetClient
-        {
-            Ensure = "Present"
-            Name = "Telnet-Client"
         }
 
         WindowsFeature RemoteDifferentialCompression
@@ -338,8 +319,8 @@ $ConfigData = @{
                     Nodename = "DSCLABPull01"
                     Role = "Pull Server"
                     }
-            )
-        }
+                )
+            }
 
 DSCLab -ConfigurationData $ConfigData -OutputPath C:\GIT\DesiredStateConfiguration\DSCResource\lab\ -Verbose
 
@@ -347,3 +328,6 @@ DSCLab -ConfigurationData $ConfigData -OutputPath C:\GIT\DesiredStateConfigurati
 #$creds = Get-Credential
 #Start-DscConfiguration -path C:\GIT\DesiredStateConfiguration\DSCResource\lab\config -wait -verbose -credential $Creds -force
 #Start-DscConfiguration -path C:\GIT\DesiredStateConfiguration\DSCResource\lab\config -ComputerName DSCLABPull01 -wait -verbose -credential $Creds -force
+
+
+Get-dscresource
