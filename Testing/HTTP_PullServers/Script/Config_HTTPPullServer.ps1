@@ -1,45 +1,78 @@
 ﻿configuration HTTPPullServer
 {
-    # Modules must exist on target pull server
-    Install-Module -Name xPSDesiredStateConfiguration
-    Import-DSCResource -ModuleName xPSDesiredStateConfiguration
-
-    Node $Computername
+    
+    Import-DscResource -ModuleName PSDesiredStateConfiguration,xPSDesiredStateConfiguration,xRemoteDesktopAdmin
+   
+    Node "DSCLABPull01" #$AllNodes.Where{$_.Role -eq "Pull Server"}.Nodename
     {
+        xRemoteDesktopAdmin RemoteDesktopSettings
+        {
+           Ensure = 'Present'
+           UserAuthentication = 'Secure'
+        }
+        
+        Registry EdgeAsAdmin
+        {
+            Ensure = "Present"
+            Key = "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System"
+            ValueName = "FilterAdministratorToken"
+            ValueData = "1"
+            ValueType = "Dword"
+        }
+        
+        WindowsFeature RemoteDifferentialCompression
+        {
+            Ensure = "Present"
+            Name = "RDC"
+        }
+        
+        WindowsFeature DSCService
+        {
+            Ensure = "Present"
+            Name = "DSC-Service"
+        }
+
+         WindowsFeature IIS{
+            Name = "web-server"
+            Ensure = "Present"
+        }
+        
+        WindowsFeature IISConsole
+        {
+            Ensure = "Present"
+            Name   = "Web-Mgmt-Console"
+            DependsOn = '[WindowsFeature]IIS'
+        }
+
         xDscWebService PSDSCPullServer
         {
             Ensure                  = "Present"
             EndpointName            = "PSDSCPullServer"
-            Port                    = 8080
+            Port                    = '8080'
             PhysicalPath            = "$env:SystemDrive\inetpub\wwwroot\PSDSCPullServer"
             CertificateThumbPrint   = "AllowUnencryptedTraffic"
             ModulePath              = "$env:PROGRAMFILES\WindowsPowerShell\DscService\Modules"
             ConfigurationPath       = "$env:PROGRAMFILES\WindowsPowerShell\DscService\Configuration"
             State                   = "Started"
-            DependsOn               = "[WindowsFeature]DSCServiceFeature"
+            DependsOn               = ("[WindowsFeature]DSCService","[WindowsFeature]IIS")
         }
 
         xDscWebService PSDSCComplianceServer
         {
             Ensure                  = "Present"
             EndpointName            = "PSDSCComplianceServer"
-            Port                    = 9080
+            Port                    = '8090'
             PhysicalPath            = "$env:SystemDrive\inetpub\wwwroot\PSDSCComplianceServer"
             CertificateThumbPrint   = "AllowUnencryptedTraffic"
             State                   = "Started"
             IsComplianceServer      = $true
-            DependsOn               = ("[WindowsFeature]DSCServiceFeature","[xDSCWebService]PSDSCPullServer")
+            DependsOn               = "[xDSCWebService]PSDSCPullServer"
         }
     }
 }
 
-# Generate MOF
+HTTPPullServer -OutputPath "C:\Users\dyeo\OneDrive - Imperial College London\DesiredStateConfiguration\Testing\HTTP_PullServers\Config" -Verbose
 
-$Computername = 'DSCLABPULL01'
-
-HTTPPullServer -ConfigurationData $ConfigData -OutputPath C:\GIT\DesiredStateConfiguration\DSCResource\lab\HTTPPullServer  -Verbose
+#$creds = $null
 #$creds = Get-Credential
-#Start-DscConfiguration -Path C:\GIT\DesiredStateConfiguration\DSCResource\lab\HTTPPullServer -Verbose -Wait -credential $Creds -force
-
-
-Exit
+#

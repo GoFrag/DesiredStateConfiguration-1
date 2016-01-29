@@ -1,48 +1,61 @@
-﻿$hostsrv = 'cc-dyeo'
-$ParentVHD = 'v:\Library\W2K12R2-Master-Diff.vhdx'
-$NewVHDPath = 'V:\Hyper-V\Virtual Hard Disks'
-$RemotePath = "\\$hostsrv\V$\Hyper-V\Virtual Hard Disks"
-$vms =  '1','2','3','4','5','6' #'DSCLabS01','DSCLabS02','DSCLabS03','DSCLabS04' ,'DSCLabPull01'
-$vmsfull = 'DSCLabDC01','DSCLabDC02'
-$switch = 'NAT'
+﻿
+workflow DifferencingDisks {
 
-foreach ($vm in $vms){ #Differencing Disk
+    param(
 
-New-VHD -ParentPath v:\Library\W2K12R2-Master-Diff.vhdx -Path "v:\Hyper-V\Virtual Hard Disks\$vm\$vm.vhdx" -ComputerName $hostsrv -Differencing -SizeBytes 40Gb
-    New-VM -ComputerName $hostsrv -VMName $vm -Generation 2 -VHDPath "v:\Hyper-V\Virtual Hard Disks\$vm\$vm.vhdx" -SwitchName $switch
-    Set-VM -ComputerName $hostsrv -Name $vm -ProcessorCount 2 -DynamicMemory -MemoryMinimumBytes 512MB -MemoryMaximumBytes 2GB -Passthru
+            [string[]]$DifferencingDisks,
+            [string]$switch = 'NAT'
+        
+        )
+
+    foreach -parallel($Member in $DifferencingDisks){
+
+      $vm = InlineScript{
+
+            New-VHD -ParentPath "v:\Library\W2K12R2-Master-Diff.vhdx" -Path "v:\Hyper-V\Virtual Hard Disks\$using:Member\$using:Member.vhdx" -CimSession cc-dyeo -Differencing -SizeBytes 40Gb
+            New-VM -VMName $using:Member -Generation 2 -VHDPath "v:\Hyper-V\Virtual Hard Disks\$using:Member\$using:Member.vhdx" -SwitchName $using:switch -CimSession cc-dyeo
+            Set-VM -Name $using:Member -ProcessorCount 2 -DynamicMemory -MemoryMinimumBytes 512MB -MemoryMaximumBytes 2GB -CimSession cc-dyeo
+            Start-VM  -Name $using:Member -CimSession cc-dyeo
+            Stop-VM -Name $using:Member -CimSession cc-dyeo -TurnOff -Force
+
+            }
+
+        $vm.Member
 
     }
-foreach ($vm in $vmsfull){    
-
-####### New VM #######
-New-VHD -ParentPath v:\Library\W2K12R2-Master-Diff.vhdx -Path "v:\Hyper-V\Virtual Hard Disks\$vm\$vm.vhdx" -ComputerName $hostsrv -Differencing -SizeBytes 40Gb
-New-VM -ComputerName $hostsrv -VMName $vm -Generation 2 -VHDPath "v:\Hyper-V\Virtual Hard Disks\$vm\$vm.vhdx" -SwitchName $switch
-Set-VM -ComputerName $hostsrv -Name $vm -ProcessorCount 2 -DynamicMemory -MemoryMinimumBytes 512MB -MemoryMaximumBytes 2GB -Passthru
 }
 
+workflow FullDisks {
 
-#Get-vm -ComputerName cc-dyeo -Name DSCLab* | Sort VMName | Start-vm  -Verbose -Confirm:$false -Passthru
-#Get-vm -ComputerName cc-dyeo -Name DSCLab* | Sort VMName |Stop-VM -TurnOff -Force -Confirm:$false -Passthru
-#Get-VMNetworkAdapter -ComputerName cc-dyeo -VMName DSCLab* | select VMName,MacAddress | Sort VMName
+    param(
 
+            [string[]]$FullDisks,
+            [string]$switch = 'NAT'
 
-<#
-Foreach ($Full in $vmsfull){
+            )
 
-New-Item -Path "\\cc-dyeo\v$\Hyper-V\Virtual Hard Disks\$full" -ItemType Directory -Force
-Copy-Item -Destination "\\cc-dyeo\v$\Hyper-V\Virtual Hard Disks\$full\$full.vhdx" -Path "\\cc-dyeo\v$\Library\W2K12R2-Master.vhdx" -Force
-New-VM -ComputerName $hostsrv -VMName $full -Generation 2 -VHDPath "v:\Hyper-V\Virtual Hard Disks\$full\$full.vhdx" -SwitchName $switch
-Set-VM -ComputerName $hostsrv -Name $full -ProcessorCount 2 -DynamicMemory -MemoryMinimumBytes 512MB -MemoryMaximumBytes 2GB -Passthru
+    foreach -parallel($DC in $Fulldisks){
+
+      $vm = InlineScript{
+
+            New-Item -Path "\\cc-dyeo\v$\Hyper-V\Virtual Hard Disks\$using:DC" -ItemType Directory -Force
+            Copy-Item -Destination "\\cc-dyeo\v$\Hyper-V\Virtual Hard Disks\$using:DC\$using:DC.vhdx" -Path "\\cc-dyeo\v$\Library\W2K12R2-Master.vhdx"
+            New-VM -cimsession cc-dyeo -VMName $using:DC -Generation 2 -VHDPath "v:\Hyper-V\Virtual Hard Disks\$using:DC\$using:DC.vhdx" -SwitchName $using:switch 
+            Set-VM -CimSession cc-dyeo -Name $using:DC -ProcessorCount 2 -DynamicMemory -MemoryMinimumBytes 512MB -MemoryMaximumBytes 2GB
+            Start-VM  -Name $using:dc -CimSession cc-dyeo
+            Stop-VM -Name $using:dc -CimSession cc-dyeo -TurnOff -Force
+        
+            }
+
+        $vm.DC
+    }
 }
 
+$FullDisks = $null
+$DifferencingDisks = $null
 
+$FullDisks = 'DSCLabDC01','DSCLabDC02'
+$DifferencingDisks = 'DSCLabS01','DSCLabS02','DSCLabS03','DSCLabS04','DSCLabPull01'
 
- 
-}
-
-
-#>
-
-
-#Invoke-Command -ComputerName cc-dyeo -ScriptBlock {Copy-Item -Path v$\Library\W2K12R2-Master.vhdx -Destination v$\Hyper-V\Virtual Hard Disks\$full\$full.vhdx}
+DifferencingDisks -DifferencingDisks DSCLabS03
+#FullDisks -FullDisks $FullDisks

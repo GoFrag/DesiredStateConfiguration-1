@@ -15,10 +15,11 @@ Configuration LCMPUSH
 }
 
 $Computername = $null
-$Computername = 'DSCLabPull01','DSCLabDC01','DSCLabDC02','DSCLabS01','DSCLabS02','DSCLabS03','DSCLabS04'
+$Computername = 'DSCLabDC01','DSCLabDC02','DSCLabPull01' #,'DSCLabS01','DSCLabS02','DSCLabS03','DSCLabS04'
 
 # Create the Computer.Meta.Mof in folder
 LCMPush -OutputPath "C:\Users\dyeo\OneDrive - Imperial College London\DesiredStateConfiguration\Environment\Lab\LCM"
 
-#$creds = get-credential
-#Set-DscLocalConfigurationManager -ComputerName $computername -Path "C:\Users\dyeo\OneDrive - Imperial College London\DesiredStateConfiguration\Test\Environment\Lab\LCM" -Verbose -Credential $creds
+$creds = get-credential
+#Set-DscLocalConfigurationManager -ComputerName $computername -Path "C:\Users\dyeo\OneDrive - Imperial College London\DesiredStateConfiguration\Environment\Lab\LCM" -Verbose -Credential $creds
+#Start-DscConfiguration -computername $computername -path "C:\Users\dyeo\OneDrive - Imperial College London\DesiredStateConfiguration\Environment\Lab\Hostnames\" -wait -verbose -credential $Creds -force

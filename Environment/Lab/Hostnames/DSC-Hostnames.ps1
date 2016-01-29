@@ -1,6 +1,5 @@
 ﻿configuration DSCLab_Hostnames
 {
-    Install-Module -Name xComputerManagement
     Import-DscResource -ModuleName xComputerManagement
 
 Node $AllNodes.Where{$_.Role -eq "Primary DC"}.Nodename
@@ -80,7 +79,7 @@ $ConfigData = @{
 DSCLab_Hostnames -ConfigurationData $ConfigData -OutputPath "C:\Users\dyeo\OneDrive - Imperial College London\DesiredStateConfiguration\Environment\Lab\Hostnames" -Verbose
 
 $Computername = $null
-$Computername = 'DSCLabDC01','DSCLabDC02','DSCLabS01','DSCLabS02','DSCLabS03','DSCLabS04','DSCLabPull01'
+$Computername = 'DSCLabDC01','DSCLabDC02','DSCLabPull01' <#'DSCLabS01','DSCLabS02','DSCLabS03','DSCLabS04'#>
 
 #$creds = Get-Credential
-#Start-DscConfiguration -path "C:\Users\dyeo\OneDrive - Imperial College London\DesiredStateConfiguration\Test\Environment\Lab\Hostnames\" -wait -verbose -credential $Creds -force
+#Start-DscConfiguration -computername $computername -path "C:\Users\dyeo\OneDrive - Imperial College London\DesiredStateConfiguration\Environment\Lab\Hostnames\" -wait -verbose -credential $Creds -force

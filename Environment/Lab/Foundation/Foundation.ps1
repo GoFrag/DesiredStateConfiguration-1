@@ -1,10 +1,5 @@
-﻿# A configuration to Create High Availability Domain Controller
-# This configuration is for standing up a new domain over two DC's
-# RDP will be Enabled, IE Enhanced Security will be disabled
-# 
-
-
-configuration Domain_Controllers
+﻿# A configuration to Create High Availability Domain Controller 
+configuration DSCLab
 {
    param
     (
@@ -16,7 +11,6 @@ configuration Domain_Controllers
         [pscredential]$NewADUserCred
         )
     
-    #Install-Module -Name xActiveDirectory,xNetworking,xComputerManagement,xPSDesiredStateConfiguration,xRemoteDesktopAdmin -verbose
     Import-DscResource -ModuleName xActiveDirectory,xNetworking,xComputerManagement,PSDesiredStateConfiguration,xPSDesiredStateConfiguration,xRemoteDesktopAdmin
     
     Node $AllNodes.Where{$_.Role -eq "Primary DC"}.Nodename
@@ -25,7 +19,7 @@ configuration Domain_Controllers
         xRemoteDesktopAdmin RemoteDesktopSettings
         {
            Ensure = 'Present'
-           UserAuthentication = 'Secure'
+           UserAuthentication = 'NonSecure'
         }
         
         Registry EdgeAsAdmin
@@ -91,7 +85,7 @@ configuration Domain_Controllers
         xRemoteDesktopAdmin RemoteDesktopSettings
         {
            Ensure = 'Present'
-           UserAuthentication = 'Secure'
+           UserAuthentication = 'NonSecure'
         }
         
         Registry EdgeAsAdmin
@@ -140,10 +134,79 @@ configuration Domain_Controllers
         }
     }
    
-   
-}
+    Node $AllNodes.Where{$_.Role -eq "Pull Server"}.Nodename
+    {
+        xRemoteDesktopAdmin RemoteDesktopSettings
+        {
+           Ensure = 'Present'
+           UserAuthentication = 'NonSecure'
+        }
+        
+        Registry EdgeAsAdmin
+        {
+            Ensure = "Present"
+            Key = "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System"
+            ValueName = "FilterAdministratorToken"
+            ValueData = "1"
+            ValueType = "Dword"
+        }
+        
+        WindowsFeature RSATADPoSH
+        {
+            Ensure = "Present"
+            Name = "RSAT-AD-Powershell"
+        }
+        
+        WindowsFeature RemoteDifferentialCompression
+        {
+            Ensure = "Present"
+            Name = "RDC"
+        }
+        
+        WindowsFeature DSCService
+        {
+            Ensure = "Present"
+            Name = "DSC-Service"
+        }
 
-# Configuration Data for AD 
+         WindowsFeature IIS{
+            Name = "web-server"
+            Ensure = "Present"
+        }
+        
+        WindowsFeature IISConsole
+        {
+            Ensure = "Present"
+            Name   = "Web-Mgmt-Console"
+            DependsOn = '[WindowsFeature]IIS'
+        }
+
+        xDscWebService PSDSCPullServer
+        {
+            Ensure                  = "Present"
+            EndpointName            = "PSDSCPullServer"
+            Port                    = '8080'
+            PhysicalPath            = "$env:SystemDrive\inetpub\wwwroot\PSDSCPullServer"
+            CertificateThumbPrint   = "AllowUnencryptedTraffic"
+            ModulePath              = "$env:PROGRAMFILES\WindowsPowerShell\DscService\Modules"
+            ConfigurationPath       = "$env:PROGRAMFILES\WindowsPowerShell\DscService\Configuration"
+            State                   = "Started"
+            DependsOn               = ("[WindowsFeature]DSCService","[WindowsFeature]IIS")
+        }
+
+        xDscWebService PSDSCComplianceServer
+        {
+            Ensure                  = "Present"
+            EndpointName            = "PSDSCComplianceServer"
+            Port                    = '8090'
+            PhysicalPath            = "$env:SystemDrive\inetpub\wwwroot\PSDSCComplianceServer"
+            CertificateThumbPrint   = "AllowUnencryptedTraffic"
+            State                   = "Started"
+            IsComplianceServer      = $true
+            DependsOn               = "[xDSCWebService]PSDSCPullServer"
+        }
+    }
+}
 
 $ConfigData = @{
     AllNodes = @(
@@ -164,15 +227,17 @@ $ConfigData = @{
                 @{
                     Nodename = "DSCLABDC02"
                     Role = "Replica DC"
+                    },
+                
+                @{
+                    Nodename = "DSCLABPull01"
+                    Role = "Pull Server"
                     }
                 )
             }
 
-$OutPutPath = "C:\Users\dyeo\OneDrive - Imperial College London\DesiredStateConfiguration\Testing\Active_Directory_Domain_Services\Config"
+DSCLab -ConfigurationData $ConfigData -OutputPath "C:\Users\dyeo\OneDrive - Imperial College London\DesiredStateConfiguration\Environment\Lab\Foundation" -Verbose
 
-
-Domain_Controllers -ConfigurationData $ConfigData -OutputPath $OutPutPath -Verbose
-
-$creds = $null
+#$creds = $null
 #$creds = Get-Credential
-#Start-DscConfiguration -path $OutPutPath -wait -verbose -credential $Creds -force
+#Start-DscConfiguration -path "C:\Users\dyeo\OneDrive - Imperial College London\DesiredStateConfiguration\Environment\Lab\Foundation" -wait -verbose -credential $Creds -force
