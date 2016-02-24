@@ -31,17 +31,16 @@ Configuration LCMPULL
 	}
 }
 
-$Computername = 'DSCLABS01','DSCLABS02','DSCLABS03','DSCLABS04'#,'DSCLABPULL01'
+$Computername = 'DSCLabDC01','DSCLabDC02'
 
 #Create Guid for Computers
 
-$guid = [guid]::NewGuid()
+#$guid = [guid]::NewGuid()
+$guid = (Get-ADOrganizationalUnit -Filter 'Name -eq "Domain Controllers"').ObjectGUID | OGV -PassThru
 
 # Create the Computer.Meta.Mof in folder
 
-#LCMPull -guid $guid -ComputerName $Computername -OutputPath c:\GIT\DesiredStateConfiguration\DSCResource\lab\LCM\HTTPPullSrv
-
-LCMPull -guid $guid -ComputerName $Computername -OutputPath C:\GIT\DesiredStateConfiguration\DSCResource\labrevised\MemberServers\PULLLCM\
+LCMPull -guid $guid -ComputerName $Computername -OutputPath "C:\DSCSource\Domain Controllers\PULLLCM\"
 
 
 #$creds = Get-Credential
