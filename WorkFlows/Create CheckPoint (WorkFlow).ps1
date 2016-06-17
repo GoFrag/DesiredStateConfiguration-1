@@ -11,7 +11,7 @@
         $vm = InlineScript{
             $date = Get-date -Format g
 
-            Checkpoint-VM -Name $using:server -CimSession 'cc-dyeo' -SnapshotName Gold" "$date
+            Checkpoint-VM -Name $using:server -CimSession 'cc-dyeo' -SnapshotName Vanilla" "$date
         
             }
 
@@ -20,6 +20,6 @@
 }
 
 $servers = $null
-$Servers =  'DSCLabDC01','DSCLabDC02','DSCLabS01','DSCLabS02','DSCLabS03','DSCLabS04','DSCLabPull01'
+$Servers =  'DSCLabDC01','DSCLabS01','DSCLabS02','DSCLabS03','DSCLabS04','DSCLabPull01'
 
 Checkpoint -Servers $servers

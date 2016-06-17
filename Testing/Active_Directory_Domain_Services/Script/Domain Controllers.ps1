@@ -84,63 +84,6 @@ configuration Domain_Controllers
             Name = "RDC"
         }
     }
-
-    Node $AllNodes.Where{$_.Role -eq "Replica DC"}.Nodename
-    {
-
-        xRemoteDesktopAdmin RemoteDesktopSettings
-        {
-           Ensure = 'Present'
-           UserAuthentication = 'Secure'
-        }
-        
-        Registry EdgeAsAdmin
-        {
-            Ensure = "Present"
-            Key = "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System"
-            ValueName = "FilterAdministratorToken"
-            ValueData = "1"
-            ValueType = "Dword"
-        }
-        
-        WindowsFeature ADDSInstall
-        {
-            Ensure = "Present"
-            Name = "AD-Domain-Services"
-        }
-
-        xWaitForADDomain DscForestWait
-        {
-            DomainName = $Node.DomainName
-            DomainUserCredential = $domainCred
-	        RetryCount = $Node.RetryCount
-            RetryIntervalSec = $Node.RetryIntervalSec
-            DependsOn = ("[WindowsFeature]ADDSInstall","[WindowsFeature]RSATADTOOLS")
-        }
-
-        xADDomainController SecondDC
-        {
-            DomainName = $Node.DomainName
-            DomainAdministratorCredential = $domainCred
-            SafemodeAdministratorPassword = $safemodeAdministratorCred
-            DependsOn = "[xWaitForADDomain]DscForestWait"
-        }
-        
-       WindowsFeature RSATADTOOLS
-        {
-            Ensure = "Present"
-            Name = "RSAT-AD-TOOLS"
-            IncludeAllSubFeature = $True
-        }
-
-        WindowsFeature RemoteDifferentialCompression
-        {
-            Ensure = "Present"
-            Name = "RDC"
-        }
-    }
-   
-   
 }
 
 # Configuration Data for AD 
@@ -159,11 +102,6 @@ $ConfigData = @{
                 @{
                     Nodename = "DSCLABDC01"
                     Role = "Primary DC"
-                    },
-        
-                @{
-                    Nodename = "DSCLABDC02"
-                    Role = "Replica DC"
                     }
                 )
             }
@@ -175,4 +113,5 @@ Domain_Controllers -ConfigurationData $ConfigData -OutputPath $OutPutPath -Verbo
 
 $creds = $null
 #$creds = Get-Credential
-#Start-DscConfiguration -path $OutPutPath -wait -verbose -credential $Creds -force
+#$OutPutPath = "C:\Users\dyeo\OneDrive - Imperial College London\DesiredStateConfiguration\Testing\Active_Directory_Domain_Services\Config"
+#Start-DscConfiguration -path $OutPutPath -wait -verbose -credential $Creds

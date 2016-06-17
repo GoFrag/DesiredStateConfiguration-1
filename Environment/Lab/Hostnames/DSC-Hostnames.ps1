@@ -9,15 +9,7 @@ Node $AllNodes.Where{$_.Role -eq "Primary DC"}.Nodename
             Name = $node.NodeName
         }
     }    
-    
-Node $AllNodes.Where{$_.Role -eq "Replica DC"}.Nodename
-    {
-        xComputer NewName
-        { 
-            Name = $node.NodeName
-        }
-    }
-    
+     
 Node $AllNodes.Where{$_.Role -eq "Member Server"}.Nodename
     {
         xComputer NewName
@@ -42,12 +34,7 @@ $ConfigData = @{
                     Nodename = "DSCLABDC01"
                     Role = "Primary DC"
                 },
-        
-                @{
-                    Nodename = "DSCLABDC02"
-                    Role = "Replica DC"
-                },
-
+                        
                 @{
                     Nodename = "DSCLABS01"
                     Role = "Member Server"
@@ -79,7 +66,7 @@ $ConfigData = @{
 DSCLab_Hostnames -ConfigurationData $ConfigData -OutputPath "C:\Users\dyeo\OneDrive - Imperial College London\DesiredStateConfiguration\Environment\Lab\Hostnames" -Verbose
 
 $Computername = $null
-$Computername = 'DSCLabDC01','DSCLabDC02','DSCLabPull01' <#'DSCLabS01','DSCLabS02','DSCLabS03','DSCLabS04'#>
+$Computername = 'DSCLabDC01','DSCLabPull01','DSCLabS01','DSCLabS02','DSCLabS03','DSCLabS04'
 
 #$creds = Get-Credential
 #Start-DscConfiguration -computername $computername -path "C:\Users\dyeo\OneDrive - Imperial College London\DesiredStateConfiguration\Environment\Lab\Hostnames\" -wait -verbose -credential $Creds -force
